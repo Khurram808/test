@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Attendance Tracker</title>
+    <title>Mobile-Friendly Attendance Tracker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -166,17 +166,35 @@
             transform: translateY(0);
         }
 
-        .grid-container {
-            display: grid;
-            grid-template-columns: 180px 1fr;
-            gap: 20px;
+        .grid-wrapper {
+            display: flex;
+            overflow-x: auto;
+            margin-left: 180px; /* Match names column width */
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-purple) var(--bg-tertiary);
+        }
+
+        .grid-wrapper::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .grid-wrapper::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        .grid-wrapper::-webkit-scrollbar-thumb {
+            background: var(--accent-purple);
+            border-radius: 4px;
         }
 
         .names-column {
+            width: 180px;
+            position: absolute;
             display: grid;
             grid-template-rows: repeat(10, 60px);
             gap: 10px;
-            margin-top: 50px; /* Match the header height */
+            z-index: 2;
         }
 
         .name-item {
@@ -189,6 +207,7 @@
             box-shadow: var(--shadow);
             transition: var(--transition);
             border-left: 4px solid var(--accent-purple);
+            height: 60px;
         }
 
         .name-item:hover {
@@ -197,12 +216,12 @@
         }
 
         .grid-content {
-            position: relative;
+            min-width: 800px; /* Minimum width for the grid */
         }
 
         .days-header {
             display: grid;
-            grid-template-columns: repeat(20, 1fr);
+            grid-template-columns: repeat(20, 60px);
             gap: 10px;
             margin-bottom: 10px;
         }
@@ -219,11 +238,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            min-width: 60px;
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(20, 1fr);
+            grid-template-columns: repeat(20, 60px);
             grid-template-rows: repeat(10, 60px);
             gap: 10px;
         }
@@ -240,6 +260,8 @@
             position: relative;
             overflow: hidden;
             border: 1px solid var(--col-separator);
+            min-width: 60px;
+            height: 60px;
         }
 
         /* Add row separators */
@@ -327,50 +349,39 @@
             background: var(--accent-red);
         }
 
-        @media (max-width: 1200px) {
-            .grid-container {
-                grid-template-columns: 150px 1fr;
-            }
-            
-            .days-header, .grid {
-                grid-template-columns: repeat(10, 1fr);
-            }
-            
-            .top-controls {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-
         @media (max-width: 900px) {
             .legend {
                 border-radius: 12px;
                 flex-wrap: wrap;
                 justify-content: center;
             }
+            
+            .top-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .grid-wrapper {
+                margin-left: 150px;
+            }
+            
+            .names-column {
+                width: 150px;
+            }
+            
+            .name-item {
+                padding: 0 10px;
+                font-size: 0.9rem;
+            }
         }
 
         @media (max-width: 768px) {
-            .days-header, .grid {
-                grid-template-columns: repeat(5, 1fr);
-            }
-            
             .container {
                 padding: 15px;
             }
             
             h1 {
                 font-size: 2rem;
-            }
-            
-            .grid-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .names-column {
-                grid-template-rows: unset;
-                grid-template-columns: repeat(2, 1fr);
-                margin-top: 0;
             }
             
             .controls {
@@ -380,6 +391,65 @@
             
             button {
                 padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .grid-wrapper {
+                margin-left: 120px;
+            }
+            
+            .names-column {
+                width: 120px;
+            }
+            
+            .name-item {
+                font-size: 0.8rem;
+                padding: 0 8px;
+            }
+            
+            .days-header, .grid {
+                grid-template-columns: repeat(20, 50px);
+            }
+            
+            .day-header, .cell {
+                min-width: 50px;
+                width: 50px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .grid-wrapper {
+                margin-left: 100px;
+            }
+            
+            .names-column {
+                width: 100px;
+            }
+            
+            .name-item {
+                font-size: 0.75rem;
+            }
+            
+            .days-header, .grid {
+                grid-template-columns: repeat(20, 45px);
+            }
+            
+            .day-header, .cell {
+                min-width: 45px;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .grid {
+                grid-template-rows: repeat(10, 45px);
+            }
+            
+            .names-column {
+                grid-template-rows: repeat(10, 45px);
+            }
+            
+            .name-item {
+                height: 45px;
             }
         }
     </style>
@@ -387,7 +457,7 @@
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-calendar-check"></i> Enhanced Attendance Tracker</h1>
+            <h1><i class="fas fa-calendar-check"></i> Mobile Attendance Tracker</h1>
             <p class="description">Track attendance status for your team. Click on each day to cycle through statuses.</p>
         </header>
         
@@ -425,13 +495,15 @@
                 <!-- Names will be inserted here -->
             </div>
             
-            <div class="grid-content">
-                <div class="days-header" id="daysHeader">
-                    <!-- Day headers will be inserted here -->
-                </div>
-                
-                <div class="grid" id="attendanceGrid">
-                    <!-- Attendance grid will be inserted here -->
+            <div class="grid-wrapper">
+                <div class="grid-content">
+                    <div class="days-header" id="daysHeader">
+                        <!-- Day headers will be inserted here -->
+                    </div>
+                    
+                    <div class="grid" id="attendanceGrid">
+                        <!-- Attendance grid will be inserted here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -461,37 +533,31 @@
             function loadData() {
                 status.textContent = "Loading data...";
                 
-                fetch('data.json')
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
+                // In a real implementation, this would fetch from a JSON file
+                // For this example, we'll use sample data
+                setTimeout(() => {
+                    // Sample data
+                    attendanceData = {
+                        names: ["Alex Johnson", "Maria Garcia", "David Smith", "Sarah Wilson", "James Brown", 
+                               "Emma Davis", "Michael Miller", "Olivia Martinez", "Robert Taylor", "Sophia Anderson"],
+                        days: 20,
+                        data: {
+                            "Alex Johnson": [0, 1, 2, 3, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 2, 1, 1, 0, 0],
+                            "Maria Garcia": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            "David Smith": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+                            "Sarah Wilson": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+                            "James Brown": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            "Emma Davis": [1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0],
+                            "Michael Miller": [1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0],
+                            "Olivia Martinez": [2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1],
+                            "Robert Taylor": [3, 1, 2, 0, 3, 1, 2, 0, 3, 1, 2, 0, 3, 1, 2, 0, 3, 1, 2, 0],
+                            "Sophia Anderson": [0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1]
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        attendanceData = data;
-                        status.textContent = `Data loaded successfully: ${attendanceData.names.length} people, ${attendanceData.days} days`;
-                        renderGrid();
-                    })
-                    .catch(error => {
-                        console.error('Error loading JSON data:', error);
-                        status.textContent = "Error loading data. Using sample data instead.";
-                        
-                        // Use sample data as fallback
-                        attendanceData = {
-                            names: ["Alex Johnson", "Maria Garcia", "David Smith", "Sarah Wilson", "James Brown", 
-                                   "Emma Davis", "Michael Miller", "Olivia Martinez", "Robert Taylor", "Sophia Anderson"],
-                            days: 20,
-                            data: {}
-                        };
-                        
-                        // Initialize all cells as blank (0)
-                        attendanceData.names.forEach(name => {
-                            attendanceData.data[name] = Array(attendanceData.days).fill(0);
-                        });
-                        
-                        renderGrid();
-                    });
+                    };
+                    
+                    status.textContent = `Data loaded successfully: ${attendanceData.names.length} people, ${attendanceData.days} days`;
+                    renderGrid();
+                }, 500);
             }
             
             // Render the grid based on attendanceData
