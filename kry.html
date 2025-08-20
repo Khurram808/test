@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Mode Attendance Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --bg-primary: #1a1c23;
+            --bg-secondary: #252731;
+            --bg-tertiary: #2f323e;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --accent-green: #4CAF50;
+            --accent-yellow: #FFC107;
+            --accent-red: #F44336;
+            --accent-purple: #7e57c2;
+            --accent-blue: #42a5f5;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1300px;
+            width: 100%;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            padding: 30px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 20px;
+        }
+
+        .names-column {
+            display: grid;
+            grid-template-rows: repeat(10, 60px);
+            gap: 10px;
+        }
+
+        .name-item {
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border-left: 4px solid var(--accent-purple);
+        }
+
+        .name-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .days-header {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .day-header {
+            text-align: center;
+            padding: 10px 0;
+            font-weight: 700;
+            color: var(--accent-purple);
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            grid-template-rows: repeat(10, 60px);
+            gap: 10px;
+        }
+
+        .cell {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1), transparent);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .cell:hover::before {
+            opacity: 1;
+        }
+
+        .cell:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .cell.blank {
+            background: var(--bg-tertiary);
+        }
+
+        .cell.present {
+            background: var(--accent-green);
+        }
+
+        .cell.late {
+            background: var(--accent-yellow);
+        }
+
+        .cell.absent {
+            background: var(--accent-red);
+        }
+
+        .cell i {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        #saveBtn {
+            background: linear-gradient(90deg, var(--accent-green), #2e7d32);
+            color: white;
+        }
+
+        #resetBtn {
+            background: linear-gradient(90deg, var(--accent-red), #c62828);
+            color: white;
+        }
+
+        #loadBtn {
+            background: linear-gradient(90deg, var(--accent-blue), #1565c0);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            background: var(--bg-tertiary);
+            padding: 8px 15px;
+            border-radius: 50px;
+            box-shadow: var(--shadow);
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .legend-present {
+            background: var(--accent-green);
+        }
+
+        .legend-late {
+            background: var(--accent-yellow);
+        }
+
+        .legend-absent {
+            background: var(--accent-red);
+        }
+
+        .legend-blank {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--text-secondary);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-green);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: var(--accent-red);
+        }
+
+        .status {
+            text-align: center;
+            margin: 15px 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        @media (max-width: 1200px) {
+            .grid-container {
+                grid-template-columns: 150px 1fr;
+            }
+            
+            .days-header, .grid {
+                grid-template-columns: repeat(10, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .days-header, .grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .names-column {
+                grid-template-rows: unset;
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calendar-check"></i> Attendance Tracker</h1>
+            <p class="description">Track attendance status for your team. Click on each day to cycle through statuses.</p>
+        </header>
+        
+        <div class="status" id="status">Loading data...</div>
+        
+        <div class="grid-container">
+            <div class="names-column" id="namesColumn">
+                <!-- Names will be inserted here -->
+            </div>
+            
+            <div class="grid-content">
+                <div class="days-header" id="daysHeader">
+                    <!-- Day headers will be inserted here -->
+                </div>
+                
+                <div class="grid" id="attendanceGrid">
+                    <!-- Attendance grid will be inserted here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color legend-present"></div>
+                <span>Present</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-late"></div>
+                <span>Late</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-absent"></div>
+                <span>Absent</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-blank"></div>
+                <span>Not Set</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="saveBtn"><i class="fas fa-save"></i> Save Data</button>
+            <button id="resetBtn"><i class="fas fa-redo"></i> Reset All</button>
+            <button id="loadBtn"><i class="fas fa-download"></i> Load Data</button>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"><i class="fas fa-check-circle"></i> Data saved successfully!</div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const namesColumn = document.getElementById('namesColumn');
+            const daysHeader = document.getElementById('daysHeader');
+            const attendanceGrid = document.getElementById('attendanceGrid');
+            const saveBtn = document.getElementById('saveBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const loadBtn = document.getElementById('loadBtn');
+            const toast = document.getElementById('toast');
+            const status = document.getElementById('status');
+            
+            let attendanceData = {
+                names: [],
+                days: 20,
+                data: {}
+            };
+            
+            // Load data from JSON file
+            function loadData() {
+                status.textContent = "Loading data...";
+                
+                fetch('data.json')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        attendanceData = data;
+                        status.textContent = `Data loaded successfully: ${attendanceData.names.length} people, ${attendanceData.days} days`;
+                        renderGrid();
+                    })
+                    .catch(error => {
+                        console.error('Error loading JSON data:', error);
+                        status.textContent = "Error loading data. Using sample data instead.";
+                        
+                        // Use sample data as fallback
+                        attendanceData = {
+                            names: ["Alex Johnson", "Maria Garcia", "David Smith", "Sarah Wilson", "James Brown", 
+                                   "Emma Davis", "Michael Miller", "Olivia Martinez", "Robert Taylor", "Sophia Anderson"],
+                            days: 20,
+                            data: {}
+                        };
+                        
+                        // Initialize all cells as blank (0)
+                        attendanceData.names.forEach(name => {
+                            attendanceData.data[name] = Array(attendanceData.days).fill(0);
+                        });
+                        
+                        renderGrid();
+                    });
+            }
+            
+            // Render the grid based on attendanceData
+            function renderGrid() {
+                // Clear existing content
+                namesColumn.innerHTML = '';
+                daysHeader.innerHTML = '';
+                attendanceGrid.innerHTML = '';
+                
+                // Generate names column
+                attendanceData.names.forEach(name => {
+                    const nameElement = document.createElement('div');
+                    nameElement.className = 'name-item';
+                    nameElement.textContent = name;
+                    namesColumn.appendChild(nameElement);
+                });
+                
+                // Generate day headers
+                for (let i = 1; i <= attendanceData.days; i++) {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'day-header';
+                    dayHeader.textContent = i;
+                    daysHeader.appendChild(dayHeader);
+                }
+                
+                // Generate attendance grid
+                attendanceData.names.forEach((name, rowIndex) => {
+                    for (let day = 0; day < attendanceData.days; day++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell blank';
+                        cell.dataset.row = rowIndex;
+                        cell.dataset.col = day;
+                        
+                        // Set initial status
+                        const status = attendanceData.data[name][day];
+                        updateCellAppearance(cell, status);
+                        
+                        cell.addEventListener('click', () => {
+                            // Cycle through statuses: 0 -> 1 -> 2 -> 3 -> 0
+                            const currentStatus = attendanceData.data[name][day];
+                            const newStatus = (currentStatus + 1) % 4;
+                            
+                            attendanceData.data[name][day] = newStatus;
+                            updateCellAppearance(cell, newStatus);
+                        });
+                        
+                        attendanceGrid.appendChild(cell);
+                    }
+                });
+            }
+            
+            // Update cell appearance based on status
+            function updateCellAppearance(cell, status) {
+                cell.classList.remove('blank', 'present', 'late', 'absent');
+                
+                switch(status) {
+                    case 0:
+                        cell.className = 'cell blank';
+                        cell.innerHTML = '';
+                        break;
+                    case 1:
+                        cell.className = 'cell present';
+                        cell.innerHTML = '<i class="fas fa-check"></i>';
+                        break;
+                    case 2:
+                        cell.className = 'cell late';
+                        cell.innerHTML = '<i class="fas fa-clock"></i>';
+                        break;
+                    case 3:
+                        cell.className = 'cell absent';
+                        cell.innerHTML = '<i class="fas fa-times"></i>';
+                        break;
+                }
+            }
+            
+            // Save data
+            function saveData() {
+                // In a real application, you would send this to a server
+                // For this example, we'll just show a success message
+                
+                // Convert data to JSON string
+                const jsonData = JSON.stringify(attendanceData, null, 2);
+                
+                // Create a blob and download link
+                const blob = new Blob([jsonData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'attendance_data.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Show toast notification
+                toast.innerHTML = '<i class="fas fa-check-circle"></i> Data saved successfully!';
+                toast.className = 'toast show';
+                
+                // Hide toast after 3 seconds
+                setTimeout(() => {
+                    toast.className = 'toast';
+                }, 3000);
+            }
+            
+            // Reset all data
+            function resetData() {
+                if (confirm('Are you sure you want to reset all data?')) {
+                    attendanceData.names.forEach(name => {
+                        attendanceData.data[name] = Array(attendanceData.days).fill(0);
+                    });
+                    
+                    // Update UI
+                    document.querySelectorAll('.cell').forEach(cell => {
+                        const row = parseInt(cell.dataset.row);
+                        const col = parseInt(cell.dataset.col);
+                        const name = attendanceData.names[row];
+                        
+                        attendanceData.data[name][col] = 0;
+                        updateCellAppearance(cell, 0);
+                    });
+                    
+                    // Show toast notification
+                    toast.innerHTML = '<i class="fas fa-info-circle"></i> All data has been reset!';
+                    toast.className = 'toast show';
+                    
+                    // Hide toast after 3 seconds
+                    setTimeout(() => {
+                        toast.className = 'toast';
+                    }, 3000);
+                }
+            }
+            
+            // Event listeners
+            saveBtn.addEventListener('click', saveData);
+            resetBtn.addEventListener('click', resetData);
+            loadBtn.addEventListener('click', loadData);
+            
+            // Initial load
+            loadData();
+        });
+    </script>
+</body>
+</html>

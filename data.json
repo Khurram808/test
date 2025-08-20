@@ -1,0 +1,27 @@
+{
+  "names": [
+    "Alex Johnson",
+    "Maria Garcia",
+    "David Smith",
+    "Sarah Wilson",
+    "James Brown",
+    "Emma Davis",
+    "Michael Miller",
+    "Olivia Martinez",
+    "Robert Taylor",
+    "Sophia Anderson"
+  ],
+  "days": 20,
+  "data": {
+    "Alex Johnson": [0, 1, 2, 3, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 2, 1, 1, 0, 0],
+    "Maria Garcia": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    "David Smith": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    "Sarah Wilson": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+    "James Brown": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "Emma Davis": [1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0],
+    "Michael Miller": [1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0],
+    "Olivia Martinez": [2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1],
+    "Robert Taylor": [3, 1, 2, 0, 3, 1, 2, 0, 3, 1, 2, 0, 3, 1, 2, 0, 3, 1, 2, 0],
+    "Sophia Anderson": [0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1]
+  }
+}
