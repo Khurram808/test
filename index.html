@@ -3,891 +3,2721 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Attendance Tracker</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>MediaFlow - Local Media Viewer</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #2D1B69 0%, #1E1039 100%);
-            color: #F5F5F5;
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
             overflow-x: hidden;
         }
 
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            background: rgba(45, 27, 105, 0.9);
-            border-radius: 20px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-            padding: 25px;
-            margin: 20px 0;
-            backdrop-filter: blur(10px);
-            animation: fadeIn 0.8s ease-out;
-            border: 1px solid #7E57C2;
+        .app {
+            min-height: 100vh;
+            transition: all 0.5s ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .light {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #1f2937;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(126, 87, 194, 0.5);
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(90deg, #AB47BC 0%, #E91E63 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-weight: 800;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .description {
-            color: #D1C4E9;
-            font-size: 1.1rem;
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.6;
-        }
-
-        .control-panel {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            padding: 14px 24px;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #AB47BC 0%, #E91E63 100%);
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(171, 71, 188, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(171, 71, 188, 0.5);
-            animation: pulse 1s infinite;
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        .add-member-btn {
-            background: linear-gradient(135deg, #7E57C2 0%, #5E35B1 100%);
-        }
-
-        .legend {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 18px;
-            background: rgba(68, 35, 135, 0.7);
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 40;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             transition: transform 0.3s ease;
         }
 
-        .legend-item:hover {
-            transform: translateY(-3px);
+        .light .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
         }
 
-        .color-box {
-            width: 22px;
-            height: 22px;
-            border-radius: 6px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        .header.hidden {
+            transform: translateY(-100%);
         }
 
-        .present-color { background: linear-gradient(135deg, #66BB6A 0%, #43A047 100%); }
-        .absent-color { background: linear-gradient(135deg, #EF5350 0%, #E53935 100%); }
-
-        .attendance-wrapper {
-            width: 100%;
-            overflow: hidden;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
-
-        .attendance-container {
-            width: 100%;
-            height: 60vh;
-            overflow: auto;
-            position: relative;
-        }
-
-        .attendance-grid {
-            background: rgba(68, 35, 135, 0.7);
-            position: relative;
-        }
-
-        .grid-header {
-            display: flex;
-            background: rgba(57, 27, 117, 0.95);
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .member-header {
-            min-width: 180px;
-            padding: 20px;
-            font-weight: 700;
+        .header-content {
+            padding: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-right: 1px solid rgba(126, 87, 194, 0.4);
-            background: rgba(57, 27, 117, 0.95);
-            position: sticky;
-            left: 0;
-            z-index: 25;
-            color: #EDE7F6;
+            max-width: 448px;
+            margin: 0 auto;
         }
 
-        .days-header {
+        .loading {
             display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #3b82f6;
         }
 
-        .day-header {
-            min-width: 70px;
-            padding: 20px 10px;
-            text-align: center;
-            font-weight: 700;
-            border-right: 1px solid rgba(126, 87, 194, 0.4);
-            background: rgba(57, 27, 117, 0.95);
-            color: #EDE7F6;
-            position: sticky;
-            top: 0;
-            z-index: 15;
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #3b82f6;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        .grid-body {
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Main Content */
+        .main {
+            padding-top: 80px;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .reels-mode .main {
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        /* Navigation */
+        .navigation {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .light .navigation {
+            background: rgba(255, 255, 255, 0.8);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .navigation.minimized {
+            transform: translateY(8px) scale(0.75);
+            opacity: 0.5;
+        }
+
+        .nav-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 12px 0;
+        }
+
+        .nav-button {
             display: flex;
             flex-direction: column;
-            position: relative;
-        }
-
-        .member-row {
-            display: flex;
-            border-bottom: 1px solid rgba(126, 87, 194, 0.3);
-            transition: background 0.3s ease;
-            scroll-snap-align: start;
-        }
-
-        .member-row:hover {
-            background: rgba(94, 53, 177, 0.3);
-        }
-
-        .member-row:last-child {
-            border-bottom: none;
-        }
-
-        .member-name {
-            min-width: 180px;
-            padding: 20px;
-            display: flex;
             align-items: center;
-            background: rgba(68, 35, 135, 0.6);
-            border-right: 1px solid rgba(126, 87, 194, 0.4);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: sticky;
-            left: 0;
-            z-index: 10;
-            color: #EDE7F6;
-        }
-
-        .member-name:hover {
-            background: rgba(94, 53, 177, 0.5);
-        }
-
-        .attendance-cells {
-            display: flex;
-        }
-
-        .attendance-cell {
-            min-width: 70px;
-            min-height: 80px;
-            border-right: 1px solid rgba(126, 87, 194, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            background: rgba(68, 35, 135, 0.4);
-            scroll-snap-align: start;
-        }
-
-        .attendance-cell:hover {
-            transform: scale(1.1);
-            z-index: 5;
-            box-shadow: 0 0 15px rgba(171, 71, 188, 0.4);
-        }
-
-        .status-indicator {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .status-bar {
-            background: rgba(68, 35, 135, 0.7);
-            padding: 18px 25px;
-            border-radius: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            font-size: 1rem;
-            margin-top: 25px;
-            border: 1px solid #7E57C2;
-            color: #D1C4E9;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            padding: 16px 26px;
-            background: rgba(68, 35, 135, 0.95);
-            color: white;
+            gap: 4px;
+            padding: 8px 24px;
             border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.4s ease;
-            z-index: 1000;
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-button:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .light .nav-button:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-button.active {
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-button svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button.active svg {
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+        }
+
+        .nav-button span {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .nav-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 4px;
+            height: 4px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Feed Styles */
+        .feed {
+            padding-bottom: 80px;
+        }
+
+        .feed-item {
+            margin-bottom: 24px;
+            background: #000;
+            border-radius: 0;
+        }
+
+        .light .feed-item {
+            background: #fff;
+        }
+
+        .feed-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+        }
+
+        .feed-user {
             display: flex;
             align-items: center;
             gap: 12px;
-            border: 1px solid #AB47BC;
         }
 
-        .toast.show {
-            transform: translateY(0);
+        .feed-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .feed-user-info h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .light .feed-user-info h3 {
+            color: #000;
+        }
+
+        .feed-user-info p {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .light .feed-user-info p {
+            color: #6b7280;
+        }
+
+        .feed-more {
+            position: relative;
+        }
+
+        .feed-more-btn {
+            padding: 8px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        .light .feed-more-btn {
+            color: #000;
+        }
+
+        .feed-info-popup {
+            position: absolute;
+            right: 0;
+            top: 40px;
+            z-index: 10;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            min-width: 256px;
+            background: #374151;
+            color: white;
+            border: 1px solid #4b5563;
+        }
+
+        .light .feed-info-popup {
+            background: white;
+            color: #000;
+            border: 1px solid #d1d5db;
+        }
+
+        .feed-info-popup h3 {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .feed-info-popup .info-item {
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .feed-info-popup .info-label {
+            font-weight: 500;
+        }
+
+        .feed-media {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            cursor: pointer;
+        }
+
+        .feed-media img,
+        .feed-media video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .feed-video-controls {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            border-radius: 50%;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .feed-actions {
+            padding: 16px;
+        }
+
+        .feed-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .feed-buttons-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .feed-action-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .light .feed-action-btn {
+            color: #000;
+        }
+
+        .feed-action-btn:hover {
+            transform: scale(1.25);
+        }
+
+        .feed-action-btn.liked {
+            color: #ef4444;
+        }
+
+        .feed-action-btn.liked svg {
+            fill: #ef4444;
+        }
+
+        .feed-likes {
+            margin-bottom: 8px;
+        }
+
+        .feed-likes p {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .light .feed-likes p {
+            color: #000;
+        }
+
+        .feed-caption {
+            margin-bottom: 8px;
+        }
+
+        .feed-caption p {
+            font-size: 14px;
+            color: white;
+        }
+
+        .light .feed-caption p {
+            color: #000;
+        }
+
+        .feed-caption .username {
+            font-weight: 600;
+        }
+
+        .feed-meta {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .light .feed-meta {
+            color: #9ca3af;
+        }
+
+        /* Reels Styles */
+        .reels {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .reels-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease-out;
+        }
+
+        .reels-container.slide-up {
+            transform: translateY(-100%);
+        }
+
+        .reels-container.slide-down {
+            transform: translateY(100%);
+        }
+
+        .reels-media {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .reels-preview {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .reels-preview.slide-up {
+            transform: translateY(100%);
+            animation: slideUpIn 0.3s ease-out forwards;
+        }
+
+        .reels-preview.slide-down {
+            transform: translateY(-100%);
+            animation: slideDownIn 0.3s ease-out forwards;
+        }
+
+        @keyframes slideUpIn {
+            to { transform: translateY(0); }
+        }
+
+        @keyframes slideDownIn {
+            to { transform: translateY(0); }
+        }
+
+        .reels-controls {
+            position: absolute;
+            bottom: 96px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            z-index: 10;
+        }
+
+        .reels-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .reels-control-btn {
+            padding: 12px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .reels-control-btn:hover {
+            transform: scale(1.25);
+        }
+
+        .reels-control-btn.liked {
+            color: #ef4444;
+        }
+
+        .reels-control-btn.liked svg {
+            fill: #ef4444;
+        }
+
+        .reels-control span {
+            color: white;
+            font-size: 12px;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .reels-info {
+            position: absolute;
+            bottom: 96px;
+            left: 16px;
+            max-width: 320px;
+            z-index: 10;
+            color: white;
+        }
+
+        .reels-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .reels-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .reels-username {
+            font-weight: 600;
+        }
+
+        .reels-caption {
+            font-size: 14px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .reels-meta {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .reels-position {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            z-index: 10;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+            border-radius: 20px;
+            padding: 8px 12px;
+        }
+
+        /* Account Styles */
+        .account {
+            padding: 0 16px 96px 16px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #111827, #374151, #111827);
+        }
+
+        .light .account {
+            background: linear-gradient(135deg, #f9fafb, #ffffff, #f3f4f6);
+            color: #111827;
+        }
+
+        .account-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 0;
+            margin-bottom: 24px;
+        }
+
+        .account-header h1 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .settings-btn {
+            padding: 12px;
+            border-radius: 16px;
+            background: rgba(55, 65, 81, 0.5);
+            border: 1px solid rgba(55, 65, 81, 0.5);
+            color: #d1d5db;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .light .settings-btn {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(209, 213, 219, 0.5);
+            color: #6b7280;
+        }
+
+        .settings-btn:hover {
+            transform: scale(1.1);
+            background: rgba(55, 65, 81, 0.5);
+            color: white;
+        }
+
+        .light .settings-btn:hover {
+            background: rgba(243, 244, 246, 0.5);
+            color: #111827;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            padding: 24px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .stat-card:hover {
+            transform: scale(1.05);
+        }
+
+        .stat-card.images {
+            background: linear-gradient(135deg, rgba(29, 78, 216, 0.2), rgba(29, 78, 216, 0.1));
+            border-color: rgba(29, 78, 216, 0.3);
+        }
+
+        .light .stat-card.images {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1));
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .stat-card.videos {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(220, 38, 38, 0.1));
+            border-color: rgba(220, 38, 38, 0.3);
+        }
+
+        .light .stat-card.videos {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(252, 165, 165, 0.1));
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .stat-card.storage {
+            background: linear-gradient(135deg, rgba(5, 150, 105, 0.2), rgba(5, 150, 105, 0.1));
+            border-color: rgba(5, 150, 105, 0.3);
+        }
+
+        .light .stat-card.storage {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(167, 243, 208, 0.1));
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .stat-card.favorites {
+            background: linear-gradient(135deg, rgba(219, 39, 119, 0.2), rgba(219, 39, 119, 0.1));
+            border-color: rgba(219, 39, 119, 0.3);
+        }
+
+        .light .stat-card.favorites {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(251, 207, 232, 0.1));
+            border-color: rgba(236, 72, 153, 0.2);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .stat-icon {
+            padding: 8px;
+            border-radius: 12px;
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .stat-card.images .stat-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .stat-card.videos .stat-icon {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .stat-card.storage .stat-icon {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .stat-card.favorites .stat-icon {
+            background: rgba(236, 72, 153, 0.2);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .stat-meta {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .light .stat-meta {
+            color: #6b7280;
+        }
+
+        .quick-stats {
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            background: linear-gradient(to right, rgba(55, 65, 81, 0.5), rgba(75, 85, 99, 0.3));
+            border: 1px solid rgba(55, 65, 81, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .light .quick-stats {
+            background: linear-gradient(to right, rgba(243, 244, 246, 0.5), rgba(255, 255, 255, 0.5));
+            border: 1px solid rgba(209, 213, 219, 0.5);
+        }
+
+        .quick-stats-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .quick-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .quick-stat {
+            text-align: center;
+        }
+
+        .quick-stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #8b5cf6;
+        }
+
+        .quick-stat.avg .quick-stat-value {
+            color: #3b82f6;
+        }
+
+        .quick-stat.liked .quick-stat-value {
+            color: #10b981;
+        }
+
+        .quick-stat-label {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .light .quick-stat-label {
+            color: #6b7280;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .section-badge {
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 20px;
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+        }
+
+        .light .section-badge {
+            background: rgba(147, 51, 234, 0.1);
+            color: #7c3aed;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .media-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(55, 65, 81, 0.3);
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+        }
+
+        .light .media-item {
+            background: rgba(229, 231, 235, 0.3);
+        }
+
+        .media-item:hover {
+            transform: scale(1.05);
+        }
+
+        .media-item img,
+        .media-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .media-item:hover .media-overlay {
             opacity: 1;
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
+        .media-title {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .media-item:hover .media-title {
+            opacity: 1;
+        }
+
+        .media-type {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .media-item:hover .media-type {
+            opacity: 1;
+        }
+
+        .media-type-icon {
+            padding: 4px;
+            border-radius: 50%;
+            background: #3b82f6;
+        }
+
+        .media-type-icon.video {
+            background: #ef4444;
+        }
+
+        .media-favorite {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+        }
+
+        .media-favorite svg {
+            width: 16px;
+            height: 16px;
+            color: #ef4444;
+            fill: #ef4444;
+        }
+
+        .recent-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .recent-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 16px;
+            background: rgba(55, 65, 81, 0.3);
+            border: 1px solid rgba(55, 65, 81, 0.3);
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+        }
+
+        .light .recent-item {
+            background: rgba(243, 244, 246, 0.5);
+            border: 1px solid rgba(209, 213, 219, 0.3);
+        }
+
+        .recent-item:hover {
+            transform: scale(1.02);
+            background: rgba(55, 65, 81, 0.5);
+        }
+
+        .light .recent-item:hover {
+            background: rgba(229, 231, 235, 0.5);
+        }
+
+        .recent-thumbnail {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .recent-thumbnail img,
+        .recent-thumbnail video {
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px);
+            object-fit: cover;
         }
 
-        .modal-content {
-            background: rgba(45, 27, 105, 0.95);
-            padding: 35px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 450px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            border: 1px solid #AB47BC;
-            animation: modalAppear 0.4s ease-out;
+        .recent-info {
+            flex: 1;
+            min-width: 0;
         }
 
-        @keyframes modalAppear {
-            from { opacity: 0; transform: scale(0.9) translateY(-20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+        .recent-name {
+            font-weight: 600;
+            font-size: 18px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .modal h2 {
-            margin-bottom: 25px;
-            text-align: center;
-            color: #EDE7F6;
-            font-size: 1.8rem;
+        .recent-meta {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-bottom: 4px;
         }
 
-        .modal input {
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 25px;
-            border-radius: 10px;
-            border: 1px solid #7E57C2;
-            background: rgba(68, 35, 135, 0.7);
-            color: #EDE7F6;
-            font-size: 1rem;
+        .light .recent-meta {
+            color: #6b7280;
         }
 
-        .modal input:focus {
-            outline: none;
-            border-color: #AB47BC;
-            box-shadow: 0 0 10px rgba(171, 71, 188, 0.5);
-        }
-
-        .modal-buttons {
+        .recent-badges {
             display: flex;
-            justify-content: center;
-            gap: 15px;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
         }
 
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
+        .recent-badge {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .recent-badge.image {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .light .recent-badge.image {
+            background: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+        }
+
+        .recent-badge.video {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .light .recent-badge.video {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        .recent-favorite {
+            margin-left: 8px;
+        }
+
+        .recent-favorite svg {
             width: 12px;
             height: 12px;
+            color: #ef4444;
+            fill: #ef4444;
         }
 
-        ::-webkit-scrollbar-track {
-            background: rgba(45, 27, 105, 0.5);
-            border-radius: 10px;
+        .recent-type {
+            flex-shrink: 0;
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #AB47BC 0%, #7E57C2 100%);
-            border-radius: 10px;
+        .recent-type svg {
+            width: 20px;
+            height: 20px;
+            color: #3b82f6;
         }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #BA68C8 0%, #9575CD 100%);
+        .recent-type.video svg {
+            color: #ef4444;
         }
 
-        /* Scroll snapping */
-        .attendance-container {
-            scroll-snap-type: both mandatory;
+        /* Settings Styles */
+        .settings {
+            padding: 0 16px 80px 16px;
+            color: white;
         }
 
-        .member-row {
-            scroll-snap-align: start;
+        .light .settings {
+            color: #111827;
         }
 
-        .attendance-cell {
-            scroll-snap-align: start;
+        .settings-header {
+            text-align: center;
+            padding: 32px 0;
         }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 18px;
+        .settings-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .settings-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .settings-subtitle {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        .light .settings-subtitle {
+            color: #6b7280;
+        }
+
+        .settings-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .settings-section {
+            padding: 24px;
+            border-radius: 16px;
+            background: rgba(55, 65, 81, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .light .settings-section {
+            background: rgba(243, 244, 246, 1);
+        }
+
+        .settings-section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .settings-section-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .settings-section-desc {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-bottom: 16px;
+        }
+
+        .light .settings-section-desc {
+            color: #6b7280;
+        }
+
+        .settings-button {
+            width: 100%;
+            padding: 12px 16px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .settings-button:hover {
+            background: #2563eb;
+            transform: scale(1.05);
+        }
+
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .theme-option {
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            background: none;
+            color: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .theme-option:hover {
+            border-color: #6b7280;
+        }
+
+        .light .theme-option:hover {
+            border-color: #9ca3af;
+        }
+
+        .theme-option.active {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.2);
+        }
+
+        .theme-option svg {
+            width: 24px;
+            height: 24px;
+            margin: 0 auto 8px;
+        }
+
+        .theme-option span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .settings-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .settings-toggle-info h3 {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .settings-toggle-info p {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        .light .settings-toggle-info p {
+            color: #6b7280;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            border-radius: 12px;
+            background: #6b7280;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: #10b981;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(24px);
+        }
+
+        /* Fullscreen Media Viewer */
+        .fullscreen-viewer {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            z-index: 10;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            border-radius: 50%;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-close:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .fullscreen-media {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-media img,
+        .fullscreen-media video {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .fullscreen-audio {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            border-radius: 50%;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-audio:hover {
+            transform: scale(1.1);
+        }
+
+        .fullscreen-controls {
+            position: absolute;
+            bottom: 32px;
+            left: 32px;
+            right: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-controls.hidden {
+            opacity: 0;
+        }
+
+        .fullscreen-seekbar {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .fullscreen-seek-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .fullscreen-time {
+            color: white;
+            font-size: 14px;
+            font-family: monospace;
+            min-width: 40px;
+        }
+
+        .fullscreen-seek {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            appearance: none;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .fullscreen-seek::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .fullscreen-seek::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Empty States */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 32px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .empty-desc {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        .light .empty-desc {
+            color: #6b7280;
+        }
+
+        /* Back Button */
+        .back-button {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 50;
+            padding: 12px;
+            border-radius: 50%;
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid rgba(55, 65, 81, 0.5);
+            color: #d1d5db;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .light .back-button {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(209, 213, 219, 0.5);
+            color: #6b7280;
+        }
+
+        .back-button:hover {
+            transform: scale(1.1);
+            background: rgba(55, 65, 81, 0.8);
+            color: white;
+        }
+
+        .light .back-button:hover {
+            background: rgba(243, 244, 246, 0.8);
+            color: #111827;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
             
-            h1 {
-                font-size: 2rem;
+            .media-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
             
-            .member-header, .member-name {
-                min-width: 140px;
-                padding: 16px;
-                font-size: 0.95rem;
-            }
-            
-            .day-header, .attendance-cell {
-                min-width: 60px;
-                min-height: 70px;
-            }
-            
-            .day-header {
-                font-size: 0.9rem;
-                padding: 16px 6px;
-            }
-            
-            button {
-                padding: 12px 18px;
-                font-size: 0.9rem;
+            .quick-stats-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
             }
         }
 
-        @media (max-width: 480px) {
-            body {
-                padding: 15px;
-            }
-            
-            .container {
-                padding: 15px;
-                border-radius: 15px;
-            }
-            
-            .control-panel {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            button {
-                width: 100%;
-                max-width: 300px;
-            }
-            
-            .legend {
-                flex-direction: column;
-                align-items: center;
-                gap: 12px;
-            }
-            
-            .member-header, .member-name {
-                min-width: 120px;
-                padding: 14px;
-                font-size: 0.9rem;
-            }
-            
-            .day-header, .attendance-cell {
-                min-width: 50px;
-                min-height: 60px;
-            }
-            
-            .day-header {
-                font-size: 0.85rem;
-                padding: 14px 4px;
-            }
-            
-            .status-bar {
-                padding: 15px;
-                text-align: center;
-                font-size: 0.9rem;
-            }
-            
-            .status-indicator {
-                width: 30px;
-                height: 30px;
-                font-size: 14px;
-            }
-        }
+        /* Utility Classes */
+        .hidden { display: none !important; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Attendance Tracker</h1>
-            <p class="description">Track your team's attendance with this modern interface</p>
+    <div id="app" class="app">
+        <!-- Header -->
+        <header id="header" class="header">
+            <div class="header-content">
+                <div id="loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <span>Loading...</span>
+                </div>
+            </div>
         </header>
 
-        <div class="control-panel">
-            <button id="saveBtn">
-                <i class="fas fa-save"></i>
-                Save
-            </button>
-            <button id="resetBtn">
-                <i class="fas fa-trash-alt"></i>
-                Reset
-            </button>
-            <button id="loadBtn">
-                <i class="fas fa-download"></i>
-                Load
-            </button>
-            <button id="addMemberBtn" class="add-member-btn">
-                <i class="fas fa-user-plus"></i>
-                Add Member
-            </button>
-        </div>
+        <!-- Main Content -->
+        <main id="main" class="main">
+            <!-- Feed View -->
+            <div id="feed-view" class="feed"></div>
 
-        <div class="legend">
-            <div class="legend-item">
-                <div class="color-box present-color"></div>
-                <span>Present</span>
-            </div>
-            <div class="legend-item">
-                <div class="color-box absent-color"></div>
-                <span>Absent</span>
-            </div>
-        </div>
+            <!-- Reels View -->
+            <div id="reels-view" class="reels hidden"></div>
 
-        <div class="attendance-wrapper">
-            <div class="attendance-container" id="attendanceContainer">
-                <div class="attendance-grid">
-                    <div class="grid-header">
-                        <div class="member-header">Team Members</div>
-                        <div class="days-header" id="daysHeader">
-                            <!-- Days will be generated here -->
-                        </div>
-                    </div>
-                    <div class="grid-body" id="attendanceGrid">
-                        <!-- Attendance grid will be generated here -->
+            <!-- Account View -->
+            <div id="account-view" class="account hidden"></div>
+
+            <!-- Settings View -->
+            <div id="settings-view" class="settings hidden"></div>
+        </main>
+
+        <!-- Navigation -->
+        <nav id="navigation" class="navigation">
+            <div class="nav-content">
+                <button class="nav-button active" data-tab="feed">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9,22 9,12 15,12 15,22"/>
+                    </svg>
+                    <span>Feed</span>
+                </button>
+                <button class="nav-button" data-tab="reels">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5,3 19,12 5,21 5,3"/>
+                    </svg>
+                    <span>Reels</span>
+                </button>
+                <button class="nav-button" data-tab="account">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>Account</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Fullscreen Media Viewer -->
+        <div id="fullscreen-viewer" class="fullscreen-viewer hidden">
+            <button id="fullscreen-close" class="fullscreen-close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+            <div id="fullscreen-media" class="fullscreen-media"></div>
+            <button id="fullscreen-audio" class="fullscreen-audio hidden">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                    <path d="m19.07 4.93-1.41 1.41A8.5 8.5 0 0 1 19.07 19.07l1.41 1.41A10.5 10.5 0 0 0 19.07 4.93z"/>
+                    <path d="m15.54 8.46-1.41 1.41A4.5 4.5 0 0 1 15.54 15.54l1.41 1.41A6.5 6.5 0 0 0 15.54 8.46z"/>
+                </svg>
+            </button>
+            <div id="fullscreen-controls" class="fullscreen-controls hidden">
+                <div class="fullscreen-seekbar">
+                    <div class="fullscreen-seek-container">
+                        <span id="current-time" class="fullscreen-time">0:00</span>
+                        <input type="range" id="seek-bar" class="fullscreen-seek" min="0" max="0" value="0">
+                        <span id="duration-time" class="fullscreen-time">0:00</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="status-bar">
-            <div id="statusMessage">Ready to track attendance. Click on any cell to update status.</div>
-        </div>
-    </div>
-
-    <div class="toast" id="toast">
-        <i class="fas fa-check-circle"></i>
-        <div>Data saved successfully!</div>
-    </div>
-
-    <div class="modal" id="addMemberModal">
-        <div class="modal-content">
-            <h2>Add New Team Member</h2>
-            <input type="text" id="newMemberName" placeholder="Enter team member name">
-            <div class="modal-buttons">
-                <button id="cancelAddMember">Cancel</button>
-                <button id="confirmAddMember" class="add-member-btn">Add</button>
-            </div>
-        </div>
+        <!-- Back Button -->
+        <button id="back-button" class="back-button hidden">←</button>
     </div>
 
     <script>
-        // Sample data structure
-        let attendanceData = {
-            teamMembers: [
-                { id: 1, name: "John Doe" },
-                { id: 2, name: "Jane Smith" },
-                { id: 3, name: "Robert Johnson" },
-                { id: 4, name: "Emily Davis" },
-                { id: 5, name: "Michael Wilson" },
-                { id: 6, name: "Sarah Brown" },
-                { id: 7, name: "David Miller" },
-                { id: 8, name: "Lisa Taylor" },
-                { id: 9, name: "James Wilson" },
-                { id: 10, name: "Emma Thompson" }
-            ],
-            attendanceRecords: {}
+        // Application State
+        let state = {
+            activeTab: 'feed',
+            mediaItems: [],
+            settings: {
+                theme: 'dark',
+                folderPath: '',
+                autoplay: true,
+                soundEnabled: true,
+                showFeedButtons: false,
+                showReelsInfo: true
+            },
+            stats: {
+                totalMedia: 0,
+                totalImages: 0,
+                totalVideos: 0,
+                totalSize: 0,
+                favoriteItems: []
+            },
+            loading: false,
+            showSettings: false,
+            fullscreenItem: null,
+            currentReelIndex: 0,
+            mutedVideos: new Set(),
+            playingVideos: new Set(),
+            showInfoPopup: null,
+            soundEnabled: true,
+            isTransitioning: false,
+            slideDirection: null
         };
 
-        // Status types
-        const STATUS_TYPES = {
-            NONE: 'none',
-            PRESENT: 'present',
-            ABSENT: 'absent'
-        };
+        // DOM Elements
+        const app = document.getElementById('app');
+        const header = document.getElementById('header');
+        const main = document.getElementById('main');
+        const navigation = document.getElementById('navigation');
+        const loading = document.getElementById('loading');
+        const feedView = document.getElementById('feed-view');
+        const reelsView = document.getElementById('reels-view');
+        const accountView = document.getElementById('account-view');
+        const settingsView = document.getElementById('settings-view');
+        const fullscreenViewer = document.getElementById('fullscreen-viewer');
+        const backButton = document.getElementById('back-button');
 
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load data from localStorage if available
-            loadData();
+        // Utility Functions
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatTime(time) {
+            const minutes = Math.floor(time / 60);
+            const seconds = Math.floor(time % 60);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function generateId(name, lastModified) {
+            return `${name}-${lastModified}`;
+        }
+
+        // Theme Management
+        function applyTheme() {
+            const theme = state.settings.theme === 'auto' 
+                ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                : state.settings.theme;
             
-            // Generate the days headers
-            generateDaysHeaders();
+            app.className = theme === 'dark' ? 'app' : 'app light';
             
-            // Generate the attendance grid
-            generateAttendanceGrid();
+            if (theme === 'dark') {
+                document.body.style.background = 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)';
+            } else {
+                document.body.style.background = 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)';
+            }
+        }
+
+        // Media Loading
+        async function loadFolderContents() {
+            try {
+                state.loading = true;
+                updateLoadingState();
+                
+                if ('showDirectoryPicker' in window && window.self === window.top) {
+                    const dirHandle = await window.showDirectoryPicker();
+                    const files = [];
+                    
+                    for await (const [name, fileHandle] of dirHandle.entries()) {
+                        if (fileHandle.kind === 'file') {
+                            const file = await fileHandle.getFile();
+                            const isImage = file.type.startsWith('image/');
+                            const isVideo = file.type.startsWith('video/');
+                            
+                            if (isImage || isVideo) {
+                                const url = URL.createObjectURL(file);
+                                files.push({
+                                    id: generateId(file.name, file.lastModified),
+                                    name: file.name,
+                                    type: isImage ? 'image' : 'video',
+                                    url,
+                                    file,
+                                    size: file.size,
+                                    lastModified: file.lastModified
+                                });
+                            }
+                        }
+                    }
+                    
+                    // Shuffle array for random display
+                    const shuffled = files.sort(() => Math.random() - 0.5);
+                    state.mediaItems = shuffled;
+                    updateStats();
+                    renderCurrentView();
+                } else {
+                    // Fallback: Use regular file input
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.multiple = true;
+                    input.accept = 'image/*,video/*';
+                    input.webkitdirectory = true;
+                    
+                    input.onchange = (e) => {
+                        const files = Array.from(e.target.files || []);
+                        const mediaFiles = [];
+                        
+                        files.forEach(file => {
+                            const isImage = file.type.startsWith('image/');
+                            const isVideo = file.type.startsWith('video/');
+                            
+                            if (isImage || isVideo) {
+                                const url = URL.createObjectURL(file);
+                                mediaFiles.push({
+                                    id: generateId(file.name, file.lastModified),
+                                    name: file.name,
+                                    type: isImage ? 'image' : 'video',
+                                    url,
+                                    file,
+                                    size: file.size,
+                                    lastModified: file.lastModified
+                                });
+                            }
+                        });
+                        
+                        // Shuffle array for random display
+                        const shuffled = mediaFiles.sort(() => Math.random() - 0.5);
+                        state.mediaItems = shuffled;
+                        updateStats();
+                        renderCurrentView();
+                    };
+                    
+                    input.click();
+                }
+                
+            } catch (error) {
+                console.error('Error loading folder:', error);
+            } finally {
+                state.loading = false;
+                updateLoadingState();
+            }
+        }
+
+        function updateStats() {
+            state.stats = {
+                totalMedia: state.mediaItems.length,
+                totalImages: state.mediaItems.filter(item => item.type === 'image').length,
+                totalVideos: state.mediaItems.filter(item => item.type === 'video').length,
+                totalSize: state.mediaItems.reduce((sum, item) => sum + item.size, 0),
+                favoriteItems: state.stats.favoriteItems
+            };
+        }
+
+        function updateLoadingState() {
+            if (state.loading) {
+                loading.classList.remove('hidden');
+            } else {
+                loading.classList.add('hidden');
+            }
+        }
+
+        // Navigation
+        function setActiveTab(tab) {
+            state.activeTab = tab;
+            state.showSettings = false;
             
-            // Set up event listeners
-            document.getElementById('saveBtn').addEventListener('click', saveData);
-            document.getElementById('resetBtn').addEventListener('click', resetData);
-            document.getElementById('loadBtn').addEventListener('click', loadData);
-            document.getElementById('addMemberBtn').addEventListener('click', showAddMemberModal);
-            document.getElementById('cancelAddMember').addEventListener('click', hideAddMemberModal);
-            document.getElementById('confirmAddMember').addEventListener('click', addNewMember);
+            // Update navigation buttons
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tab === tab) {
+                    btn.classList.add('active');
+                }
+            });
             
-            // Add smooth scrolling behavior
-            setupSmoothScrolling();
+            // Update app classes for reels mode
+            if (tab === 'reels') {
+                app.classList.add('reels-mode');
+                header.classList.add('hidden');
+                navigation.classList.add('minimized');
+            } else {
+                app.classList.remove('reels-mode');
+                header.classList.remove('hidden');
+                navigation.classList.remove('minimized');
+            }
+            
+            renderCurrentView();
+        }
+
+        function showSettings() {
+            state.showSettings = true;
+            backButton.classList.remove('hidden');
+            renderCurrentView();
+        }
+
+        function hideSettings() {
+            state.showSettings = false;
+            backButton.classList.add('hidden');
+            renderCurrentView();
+        }
+
+        // Favorites
+        function toggleFavorite(itemId) {
+            if (state.stats.favoriteItems.includes(itemId)) {
+                state.stats.favoriteItems = state.stats.favoriteItems.filter(id => id !== itemId);
+            } else {
+                state.stats.favoriteItems.push(itemId);
+            }
+            renderCurrentView();
+        }
+
+        // Feed Functions
+        function renderFeed() {
+            if (state.mediaItems.length === 0) {
+                feedView.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📁</div>
+                        <p class="empty-title">No media files found</p>
+                        <p class="empty-desc">Select a folder from settings to start viewing your photos and videos</p>
+                    </div>
+                `;
+                return;
+            }
+
+            feedView.innerHTML = state.mediaItems.map(item => `
+                <div class="feed-item">
+                    <div class="feed-header">
+                        <div class="feed-user">
+                            <div class="feed-avatar">M</div>
+                            <div class="feed-user-info">
+                                <h3>My Media</h3>
+                                <p>${new Date(item.lastModified).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <div class="feed-more">
+                            <button class="feed-more-btn" onclick="toggleInfoPopup('${item.id}')">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="1"/>
+                                    <circle cx="19" cy="12" r="1"/>
+                                    <circle cx="5" cy="12" r="1"/>
+                                </svg>
+                            </button>
+                            ${state.showInfoPopup === item.id ? `
+                                <div class="feed-info-popup">
+                                    <h3>Media Information</h3>
+                                    <div class="info-item"><span class="info-label">Name:</span> ${item.name}</div>
+                                    <div class="info-item"><span class="info-label">Type:</span> ${item.type.toUpperCase()}</div>
+                                    <div class="info-item"><span class="info-label">Size:</span> ${formatBytes(item.size)}</div>
+                                    <div class="info-item"><span class="info-label">Modified:</span> ${new Date(item.lastModified).toLocaleString()}</div>
+                                    ${item.dimensions ? `<div class="info-item"><span class="info-label">Dimensions:</span> ${item.dimensions.width} × ${item.dimensions.height}</div>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="feed-media" onclick="openFullscreen('${item.id}')">
+                        ${item.type === 'image' ? `
+                            <img src="${item.url}" alt="${item.name}" loading="lazy">
+                        ` : `
+                            <video 
+                                src="${item.url}" 
+                                muted 
+                                loop 
+                                playsInline 
+                                preload="metadata"
+                                data-video-id="${item.id}"
+                            ></video>
+                            <button class="feed-video-controls" onclick="event.stopPropagation(); toggleVideoMute('${item.id}')">
+                                ${state.mutedVideos.has(item.id) ? `
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                        <line x1="23" y1="9" x2="17" y2="15"/>
+                                        <line x1="17" y1="9" x2="23" y2="15"/>
+                                    </svg>
+                                ` : `
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                        <path d="m19.07 4.93-1.41 1.41A8.5 8.5 0 0 1 19.07 19.07l1.41 1.41A10.5 10.5 0 0 0 19.07 4.93z"/>
+                                        <path d="m15.54 8.46-1.41 1.41A4.5 4.5 0 0 1 15.54 15.54l1.41 1.41A6.5 6.5 0 0 0 15.54 8.46z"/>
+                                    </svg>
+                                `}
+                            </button>
+                        `}
+                    </div>
+                    <div class="feed-actions">
+                        <div class="feed-buttons">
+                            <div class="feed-buttons-left">
+                                <button class="feed-action-btn ${state.stats.favoriteItems.includes(item.id) ? 'liked' : ''}" onclick="toggleFavorite('${item.id}')">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="m19 14 1.5-1.5c.8-.8.8-2.1 0-2.8L12 1.2 3.5 9.7c-.8.8-.8 2.1 0 2.8L5 14l7-7 7 7z"/>
+                                    </svg>
+                                </button>
+                                ${state.settings.showFeedButtons ? `
+                                    <button class="feed-action-btn">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/>
+                                        </svg>
+                                    </button>
+                                    <button class="feed-action-btn">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="22" y1="2" x2="11" y2="13"/>
+                                            <polygon points="22,2 15,22 11,13 2,9 22,2"/>
+                                        </svg>
+                                    </button>
+                                ` : ''}
+                            </div>
+                            ${state.settings.showFeedButtons ? `
+                                <button class="feed-action-btn">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+                                    </svg>
+                                </button>
+                            ` : ''}
+                        </div>
+                        <div class="feed-likes">
+                            <p>${Math.floor(Math.random() * 1000) + 1} likes</p>
+                        </div>
+                        <div class="feed-caption">
+                            <p><span class="username">My Media</span> ${item.name}</p>
+                        </div>
+                        <p class="feed-meta">${(item.size / 1024 / 1024).toFixed(1)} MB • ${item.type.toUpperCase()}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Setup intersection observer for videos
+            setupVideoIntersectionObserver();
+        }
+
+        function setupVideoIntersectionObserver() {
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        const video = entry.target;
+                        const videoId = video.getAttribute('data-video-id');
+                        
+                        if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                            video.play().catch(() => {});
+                            state.playingVideos.add(videoId);
+                        } else {
+                            video.pause();
+                            state.playingVideos.delete(videoId);
+                        }
+                    });
+                },
+                {
+                    threshold: 0.5,
+                    rootMargin: '0px'
+                }
+            );
+
+            document.querySelectorAll('video[data-video-id]').forEach(video => {
+                observer.observe(video);
+            });
+        }
+
+        function toggleVideoMute(itemId) {
+            if (state.mutedVideos.has(itemId)) {
+                state.mutedVideos.delete(itemId);
+            } else {
+                state.mutedVideos.add(itemId);
+            }
+            
+            const video = document.querySelector(`video[data-video-id="${itemId}"]`);
+            if (video) {
+                video.muted = state.mutedVideos.has(itemId);
+            }
+            
+            renderCurrentView();
+        }
+
+        function toggleInfoPopup(itemId) {
+            state.showInfoPopup = state.showInfoPopup === itemId ? null : itemId;
+            renderCurrentView();
+        }
+
+        // Reels Functions
+        function renderReels() {
+            if (state.mediaItems.length === 0) {
+                reelsView.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎬</div>
+                        <p class="empty-title">No media to show</p>
+                        <p class="empty-desc">Add some photos and videos to your selected folder</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const currentItem = state.mediaItems[state.currentReelIndex];
+            
+            reelsView.innerHTML = `
+                <div class="reels-container ${state.slideDirection ? `slide-${state.slideDirection}` : ''}">
+                    ${currentItem.type === 'image' ? `
+                        <img src="${currentItem.url}" alt="${currentItem.name}" class="reels-media">
+                    ` : `
+                        <video 
+                            src="${currentItem.url}" 
+                            class="reels-media" 
+                            autoplay 
+                            loop 
+                            muted="${!state.soundEnabled}"
+                            playsinline
+                            onclick="toggleVideoPlayPause()"
+                        ></video>
+                    `}
+                </div>
+
+                ${state.slideDirection === 'up' && state.currentReelIndex < state.mediaItems.length - 1 ? `
+                    <div class="reels-preview slide-up">
+                        ${state.mediaItems[state.currentReelIndex + 1].type === 'image' ? `
+                            <img src="${state.mediaItems[state.currentReelIndex + 1].url}" alt="${state.mediaItems[state.currentReelIndex + 1].name}" class="reels-media">
+                        ` : `
+                            <video src="${state.mediaItems[state.currentReelIndex + 1].url}" class="reels-media" muted playsinline></video>
+                        `}
+                    </div>
+                ` : ''}
+
+                ${state.slideDirection === 'down' && state.currentReelIndex > 0 ? `
+                    <div class="reels-preview slide-down">
+                        ${state.mediaItems[state.currentReelIndex - 1].type === 'image' ? `
+                            <img src="${state.mediaItems[state.currentReelIndex - 1].url}" alt="${state.mediaItems[state.currentReelIndex - 1].name}" class="reels-media">
+                        ` : `
+                            <video src="${state.mediaItems[state.currentReelIndex - 1].url}" class="reels-media" muted playsinline></video>
+                        `}
+                    </div>
+                ` : ''}
+
+                <div class="reels-controls">
+                    <div class="reels-control">
+                        <button class="reels-control-btn ${state.stats.favoriteItems.includes(currentItem.id) ? 'liked' : ''}" onclick="toggleFavorite('${currentItem.id}')">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="m19 14 1.5-1.5c.8-.8.8-2.1 0-2.8L12 1.2 3.5 9.7c-.8.8-.8 2.1 0 2.8L5 14l7-7 7 7z"/>
+                            </svg>
+                        </button>
+                        <span>${Math.floor(Math.random() * 1000) + 1}</span>
+                    </div>
+                    
+                    ${currentItem.type === 'video' ? `
+                        <div class="reels-control">
+                            <button class="reels-control-btn" onclick="toggleReelsSound()">
+                                ${state.soundEnabled ? `
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                        <path d="m19.07 4.93-1.41 1.41A8.5 8.5 0 0 1 19.07 19.07l1.41 1.41A10.5 10.5 0 0 0 19.07 4.93z"/>
+                                        <path d="m15.54 8.46-1.41 1.41A4.5 4.5 0 0 1 15.54 15.54l1.41 1.41A6.5 6.5 0 0 0 15.54 8.46z"/>
+                                    </svg>
+                                ` : `
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                        <line x1="23" y1="9" x2="17" y2="15"/>
+                                        <line x1="17" y1="9" x2="23" y2="15"/>
+                                    </svg>
+                                `}
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+
+                ${state.settings.showReelsInfo ? `
+                    <div class="reels-info">
+                        <div class="reels-user">
+                            <div class="reels-avatar">M</div>
+                            <span class="reels-username">My Media</span>
+                        </div>
+                        <p class="reels-caption">${currentItem.name}</p>
+                        <p class="reels-meta">${(currentItem.size / 1024 / 1024).toFixed(1)} MB • ${currentItem.type.toUpperCase()}</p>
+                    </div>
+                ` : ''}
+
+                <div class="reels-position">
+                    ${state.currentReelIndex + 1} / ${state.mediaItems.length}
+                </div>
+            `;
+
+            setupReelsGestures();
+        }
+
+        function setupReelsGestures() {
+            let startY = 0;
+            let isDragging = false;
+
+            reelsView.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                isDragging = true;
+            });
+
+            reelsView.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+            });
+
+            reelsView.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                
+                const endY = e.changedTouches[0].clientY;
+                const deltaY = startY - endY;
+                const threshold = 50;
+
+                if (Math.abs(deltaY) > threshold) {
+                    if (deltaY > 0) {
+                        goToNextReel();
+                    } else {
+                        goToPreviousReel();
+                    }
+                }
+            });
+
+            reelsView.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                if (e.deltaY > 0) {
+                    goToNextReel();
+                } else {
+                    goToPreviousReel();
+                }
+            });
+        }
+
+        function goToNextReel() {
+            if (state.currentReelIndex < state.mediaItems.length - 1 && !state.isTransitioning) {
+                state.isTransitioning = true;
+                state.slideDirection = 'up';
+                setTimeout(() => {
+                    state.currentReelIndex++;
+                    state.slideDirection = null;
+                    state.isTransitioning = false;
+                    renderReels();
+                }, 150);
+                renderReels();
+            }
+        }
+
+        function goToPreviousReel() {
+            if (state.currentReelIndex > 0 && !state.isTransitioning) {
+                state.isTransitioning = true;
+                state.slideDirection = 'down';
+                setTimeout(() => {
+                    state.currentReelIndex--;
+                    state.slideDirection = null;
+                    state.isTransitioning = false;
+                    renderReels();
+                }, 150);
+                renderReels();
+            }
+        }
+
+        function toggleVideoPlayPause() {
+            const video = reelsView.querySelector('video');
+            if (video) {
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            }
+        }
+
+        function toggleReelsSound() {
+            state.soundEnabled = !state.soundEnabled;
+            const video = reelsView.querySelector('video');
+            if (video) {
+                video.muted = !state.soundEnabled;
+            }
+            renderReels();
+        }
+
+        // Account Functions
+        function renderAccount() {
+            const favoriteItems = state.mediaItems.filter(item => state.stats.favoriteItems.includes(item.id));
+            const recentItems = [...state.mediaItems].sort((a, b) => b.lastModified - a.lastModified).slice(0, 6);
+
+            accountView.innerHTML = `
+                <div class="account-header">
+                    <h1>Account</h1>
+                    <button class="settings-btn" onclick="showSettings()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="m12 1 1.27 2.418c.34.646.646 1.08 1.418 1.27L17 6l-1.27 2.418c-.34.646-.646 1.08-1.418 1.27L12 11l-1.27-2.418c-.34-.646-.646-1.08-1.418-1.27L7 6l1.27-2.418c.34-.646.646-1.08 1.418-1.27L12 1"/>
+                            <path d="m19 14 .7 1.336c.17.323.323.54.709.635L22 16.5l-.7 1.336c-.17.323-.323.54-.709.635L19 19l-.7-1.336c-.17-.323-.323-.54-.709-.635L16 16.5l.7-1.336c.17-.323.323-.54.709-.635L19 14"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card images">
+                        <div class="stat-header">
+                            <div class="stat-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;">
+                                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                                    <circle cx="9" cy="9" r="2"/>
+                                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                                </svg>
+                            </div>
+                            <span class="stat-label">Images</span>
+                        </div>
+                        <p class="stat-value">${state.stats.totalImages}</p>
+                        <p class="stat-meta">${((state.stats.totalImages / state.stats.totalMedia) * 100 || 0).toFixed(0)}% of collection</p>
+                    </div>
+                    
+                    <div class="stat-card videos">
+                        <div class="stat-header">
+                            <div class="stat-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #ef4444;">
+                                    <path d="m22 8-6 4 6 4V8Z"/>
+                                    <rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>
+                                </svg>
+                            </div>
+                            <span class="stat-label">Videos</span>
+                        </div>
+                        <p class="stat-value">${state.stats.totalVideos}</p>
+                        <p class="stat-meta">${((state.stats.totalVideos / state.stats.totalMedia) * 100 || 0).toFixed(0)}% of collection</p>
+                    </div>
+                    
+                    <div class="stat-card storage">
+                        <div class="stat-header">
+                            <div class="stat-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #10b981;">
+                                    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                                    <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+                                    <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
+                                </svg>
+                            </div>
+                            <span class="stat-label">Storage</span>
+                        </div>
+                        <p class="stat-value">${formatBytes(state.stats.totalSize)}</p>
+                        <p class="stat-meta">Total file size</p>
+                    </div>
+                    
+                    <div class="stat-card favorites">
+                        <div class="stat-header">
+                            <div class="stat-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #ec4899;">
+                                    <path d="m19 14 1.5-1.5c.8-.8.8-2.1 0-2.8L12 1.2 3.5 9.7c-.8.8-.8 2.1 0 2.8L5 14l7-7 7 7z"/>
+                                </svg>
+                            </div>
+                            <span class="stat-label">Favorites</span>
+                        </div>
+                        <p class="stat-value">${state.stats.favoriteItems.length}</p>
+                        <p class="stat-meta">Liked items</p>
+                    </div>
+                </div>
+
+                <div class="quick-stats">
+                    <h3 class="quick-stats-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #8b5cf6;">
+                            <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+                        </svg>
+                        Quick Stats
+                    </h3>
+                    <div class="quick-stats-grid">
+                        <div class="quick-stat">
+                            <p class="quick-stat-value">${state.stats.totalMedia}</p>
+                            <p class="quick-stat-label">Total Items</p>
+                        </div>
+                        <div class="quick-stat avg">
+                            <p class="quick-stat-value">${state.stats.totalMedia > 0 ? Math.round(state.stats.totalSize / state.stats.totalMedia / 1024 / 1024) : 0}</p>
+                            <p class="quick-stat-label">Avg Size (MB)</p>
+                        </div>
+                        <div class="quick-stat liked">
+                            <p class="quick-stat-value">${((state.stats.favoriteItems.length / state.stats.totalMedia) * 100 || 0).toFixed(0)}%</p>
+                            <p class="quick-stat-label">Liked</p>
+                        </div>
+                    </div>
+                </div>
+
+                ${favoriteItems.length > 0 ? `
+                    <div class="section">
+                        <div class="section-header">
+                            <h2 class="section-title">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #fbbf24;">
+                                    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2"/>
+                                </svg>
+                                Favorite Items
+                                <span class="section-badge">${favoriteItems.length}</span>
+                            </h2>
+                        </div>
+                        <div class="media-grid">
+                            ${favoriteItems.slice(0, 6).map(item => `
+                                <div class="media-item">
+                                    ${item.type === 'image' ? `
+                                        <img src="${item.url}" alt="${item.name}">
+                                    ` : `
+                                        <video src="${item.url}" muted></video>
+                                    `}
+                                    <div class="media-overlay"></div>
+                                    <div class="media-title">${item.name}</div>
+                                    <div class="media-type">
+                                        <div class="media-type-icon ${item.type}">
+                                            ${item.type === 'image' ? `
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: white;">
+                                                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                                                    <circle cx="9" cy="9" r="2"/>
+                                                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                                                </svg>
+                                            ` : `
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: white;">
+                                                    <path d="m22 8-6 4 6 4V8Z"/>
+                                                    <rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>
+                                                </svg>
+                                            `}
+                                        </div>
+                                    </div>
+                                    <div class="media-favorite">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                                            <path d="m19 14 1.5-1.5c.8-.8.8-2.1 0-2.8L12 1.2 3.5 9.7c-.8.8-.8 2.1 0 2.8L5 14l7-7 7 7z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${recentItems.length > 0 ? `
+                    <div class="section">
+                        <div class="section-header">
+                            <h2 class="section-title">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12,6 12,12 16,14"/>
+                                </svg>
+                                Recent Items
+                            </h2>
+                        </div>
+                        <div class="recent-items">
+                            ${recentItems.map(item => `
+                                <div class="recent-item">
+                                    <div class="recent-thumbnail">
+                                        ${item.type === 'image' ? `
+                                            <img src="${item.url}" alt="${item.name}">
+                                        ` : `
+                                            <video src="${item.url}" muted></video>
+                                        `}
+                                    </div>
+                                    <div class="recent-info">
+                                        <p class="recent-name">${item.name}</p>
+                                        <p class="recent-meta">${new Date(item.lastModified).toLocaleDateString()} • ${formatBytes(item.size)}</p>
+                                        <div class="recent-badges">
+                                            <span class="recent-badge ${item.type}">${item.type.toUpperCase()}</span>
+                                            ${state.stats.favoriteItems.includes(item.id) ? `
+                                                <div class="recent-favorite">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                                                        <path d="m19 14 1.5-1.5c.8-.8.8-2.1 0-2.8L12 1.2 3.5 9.7c-.8.8-.8 2.1 0 2.8L5 14l7-7 7 7z"/>
+                                                    </svg>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="recent-type ${item.type}">
+                                        ${item.type === 'image' ? `
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                                                <circle cx="9" cy="9" r="2"/>
+                                                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                                            </svg>
+                                        ` : `
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="m22 8-6 4 6 4V8Z"/>
+                                                <rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>
+                                            </svg>
+                                        `}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${state.mediaItems.length > 0 ? `
+                    <div class="section">
+                        <div class="section-header">
+                            <h2 class="section-title">
+                                All Media
+                                <span class="section-badge">${state.mediaItems.length}</span>
+                            </h2>
+                        </div>
+                        <div class="media-grid">
+                            ${state.mediaItems.map(item => `
+                                <div class="media-item">
+                                    ${item.type === 'image' ? `
+                                        <img src="${item.url}" alt="${item.name}">
+                                    ` : `
+                                        <video src="${item.url}" muted></video>
+                                    `}
+                                    <div class="media-overlay"></div>
+                                    <div class="media-title">${item.name}</div>
+                                    <div class="media-type">
+                                        <div class="media-type-icon ${item.type}">
+                                            ${item.type === 'image' ? `
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: white;">
+                                                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                                                    <circle cx="9" cy="9" r="2"/>
+                                                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                                                </svg>
+                                            ` : `
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: white;">
+                                                    <path d="m22 8-6 4 6 4V8Z"/>
+                                                    <rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>
+                                                </svg>
+                                            `}
+                                        </div>
+                                    </div>
+                                    ${state.stats.favoriteItems.includes(item.id) ? `
+                                        <div class="media-favorite">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                                                <path d="m19 14 1.5-1.5c.8-.8.8-2.1 0-2.8L12 1.2 3.5 9.7c-.8.8-.8 2.1 0 2.8L5 14l7-7 7 7z"/>
+                                            </svg>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // Settings Functions
+        function renderSettings() {
+            settingsView.innerHTML = `
+                <div class="settings-header">
+                    <div class="settings-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 3a6.364 6.364 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+                        </svg>
+                    </div>
+                    <h1 class="settings-title">Settings</h1>
+                    <p class="settings-subtitle">Customize your experience</p>
+                </div>
+
+                <div class="settings-sections">
+                    <div class="settings-section">
+                        <div class="settings-section-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                            </svg>
+                            <h2 class="settings-section-title">Media Folder</h2>
+                        </div>
+                        <p class="settings-section-desc">Select a folder containing your photos and videos</p>
+                        <button class="settings-button" onclick="loadFolderContents()">Choose Folder</button>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-section-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #8b5cf6;">
+                                <circle cx="13.5" cy="6.5" r=".5"/>
+                                <circle cx="17.5" cy="10.5" r=".5"/>
+                                <circle cx="8.5" cy="7.5" r=".5"/>
+                                <circle cx="6.5" cy="11.5" r=".5"/>
+                                <circle cx="12.5" cy="13.5" r=".5"/>
+                                <circle cx="16.5" cy="17.5" r=".5"/>
+                                <circle cx="10.5" cy="16.5" r=".5"/>
+                                <circle cx="15.5" cy="14.5" r=".5"/>
+                                <circle cx="9.5" cy="19.5" r=".5"/>
+                                <circle cx="5.5" cy="15.5" r=".5"/>
+                            </svg>
+                            <h2 class="settings-section-title">Theme</h2>
+                        </div>
+                        <div class="theme-options">
+                            ${['light', 'dark', 'auto'].map(theme => `
+                                <button class="theme-option ${state.settings.theme === theme ? 'active' : ''}" onclick="updateTheme('${theme}')">
+                                    ${theme === 'light' ? `
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="5"/>
+                                            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                                        </svg>
+                                    ` : theme === 'dark' ? `
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                                        </svg>
+                                    ` : `
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect width="20" height="14" x="2" y="3" rx="2"/>
+                                            <line x1="8" y1="21" x2="16" y2="21"/>
+                                            <line x1="12" y1="17" x2="12" y2="21"/>
+                                        </svg>
+                                    `}
+                                    <span>${theme.charAt(0).toUpperCase() + theme.slice(1)}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-section-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #10b981;">
+                                <rect width="7" height="9" x="3" y="3" rx="1"/>
+                                <rect width="7" height="5" x="14" y="3" rx="1"/>
+                                <rect width="7" height="9" x="14" y="12" rx="1"/>
+                                <rect width="7" height="5" x="3" y="16" rx="1"/>
+                            </svg>
+                            <h2 class="settings-section-title">Feed Options</h2>
+                        </div>
+                        <div class="settings-toggle">
+                            <div class="settings-toggle-info">
+                                <h3>Show Share & Save Buttons</h3>
+                                <p>Display additional action buttons in feed</p>
+                            </div>
+                            <div class="toggle-switch ${state.settings.showFeedButtons ? 'active' : ''}" onclick="toggleSetting('showFeedButtons')">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-section-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #8b5cf6;">
+                                <polygon points="5,3 19,12 5,21 5,3"/>
+                            </svg>
+                            <h2 class="settings-section-title">Reels Options</h2>
+                        </div>
+                        <div class="settings-toggle">
+                            <div class="settings-toggle-info">
+                                <h3>Show Media Info</h3>
+                                <p>Display media information overlay in reels</p>
+                            </div>
+                            <div class="toggle-switch ${state.settings.showReelsInfo ? 'active' : ''}" onclick="toggleSetting('showReelsInfo')">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-section-header">
+                            <h2 class="settings-section-title">Media Preferences</h2>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <div class="settings-toggle">
+                                <div class="settings-toggle-info" style="display: flex; align-items: center; gap: 12px;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #ef4444;">
+                                        <polygon points="5,3 19,12 5,21 5,3"/>
+                                    </svg>
+                                    <div>
+                                        <h3>Auto-play Videos</h3>
+                                        <p>Automatically play videos in feed</p>
+                                    </div>
+                                </div>
+                                <div class="toggle-switch ${state.settings.autoplay ? 'active' : ''}" onclick="toggleSetting('autoplay')">
+                                    <div class="toggle-slider"></div>
+                                </div>
+                            </div>
+
+                            <div class="settings-toggle">
+                                <div class="settings-toggle-info" style="display: flex; align-items: center; gap: 12px;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;">
+                                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                        <path d="m19.07 4.93-1.41 1.41A8.5 8.5 0 0 1 19.07 19.07l1.41 1.41A10.5 10.5 0 0 0 19.07 4.93z"/>
+                                        <path d="m15.54 8.46-1.41 1.41A4.5 4.5 0 0 1 15.54 15.54l1.41 1.41A6.5 6.5 0 0 0 15.54 8.46z"/>
+                                    </svg>
+                                    <div>
+                                        <h3>Sound Enabled</h3>
+                                        <p>Enable sound for videos</p>
+                                    </div>
+                                </div>
+                                <div class="toggle-switch ${state.settings.soundEnabled ? 'active' : ''}" onclick="toggleSetting('soundEnabled')">
+                                    <div class="toggle-slider"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateTheme(theme) {
+            state.settings.theme = theme;
+            applyTheme();
+            renderSettings();
+        }
+
+        function toggleSetting(setting) {
+            state.settings[setting] = !state.settings[setting];
+            renderSettings();
+        }
+
+        // Fullscreen Media Viewer
+        function openFullscreen(itemId) {
+            const item = state.mediaItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            state.fullscreenItem = item;
+            
+            const mediaContainer = document.getElementById('fullscreen-media');
+            const audioButton = document.getElementById('fullscreen-audio');
+            const controls = document.getElementById('fullscreen-controls');
+            
+            if (item.type === 'image') {
+                mediaContainer.innerHTML = `<img src="${item.url}" alt="${item.name}">`;
+                audioButton.classList.add('hidden');
+                controls.classList.add('hidden');
+            } else {
+                mediaContainer.innerHTML = `
+                    <video 
+                        id="fullscreen-video"
+                        src="${item.url}" 
+                        autoplay 
+                        loop 
+                        muted 
+                        playsinline
+                    ></video>
+                `;
+                audioButton.classList.remove('hidden');
+                controls.classList.remove('hidden');
+                setupFullscreenVideoControls();
+            }
+            
+            fullscreenViewer.classList.remove('hidden');
+        }
+
+        function closeFullscreen() {
+            state.fullscreenItem = null;
+            fullscreenViewer.classList.add('hidden');
+        }
+
+        function setupFullscreenVideoControls() {
+            const video = document.getElementById('fullscreen-video');
+            const audioButton = document.getElementById('fullscreen-audio');
+            const controls = document.getElementById('fullscreen-controls');
+            const currentTime = document.getElementById('current-time');
+            const durationTime = document.getElementById('duration-time');
+            const seekBar = document.getElementById('seek-bar');
+            
+            let soundEnabled = false;
+            let showControls = true;
+            let hideControlsTimer;
+
+            const resetTimer = () => {
+                showControls = true;
+                controls.classList.remove('hidden');
+                clearTimeout(hideControlsTimer);
+                hideControlsTimer = setTimeout(() => {
+                    showControls = false;
+                    controls.classList.add('hidden');
+                }, 3000);
+            };
+
+            const handleMouseMove = () => resetTimer();
+            const handleTouchStart = () => resetTimer();
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('touchstart', handleTouchStart);
+            resetTimer();
+
+            // Audio toggle
+            audioButton.onclick = () => {
+                soundEnabled = !soundEnabled;
+                video.muted = !soundEnabled;
+                audioButton.innerHTML = soundEnabled ? `
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <path d="m19.07 4.93-1.41 1.41A8.5 8.5 0 0 1 19.07 19.07l1.41 1.41A10.5 10.5 0 0 0 19.07 4.93z"/>
+                        <path d="m15.54 8.46-1.41 1.41A4.5 4.5 0 0 1 15.54 15.54l1.41 1.41A6.5 6.5 0 0 0 15.54 8.46z"/>
+                    </svg>
+                ` : `
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <line x1="23" y1="9" x2="17" y2="15"/>
+                        <line x1="17" y1="9" x2="23" y2="15"/>
+                    </svg>
+                `;
+            };
+
+            // Video controls
+            video.onclick = () => {
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            };
+
+            video.ontimeupdate = () => {
+                currentTime.textContent = formatTime(video.currentTime);
+                seekBar.value = video.currentTime;
+                const progress = (video.currentTime / video.duration) * 100;
+                seekBar.style.background = `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${progress}%, #4b5563 ${progress}%, #4b5563 100%)`;
+            };
+
+            video.onloadedmetadata = () => {
+                durationTime.textContent = formatTime(video.duration);
+                seekBar.max = video.duration;
+            };
+
+            seekBar.oninput = () => {
+                video.currentTime = seekBar.value;
+            };
+
+            // Cleanup
+            const cleanup = () => {
+                clearTimeout(hideControlsTimer);
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('touchstart', handleTouchStart);
+            };
+
+            // Store cleanup function for later use
+            fullscreenViewer.cleanup = cleanup;
+        }
+
+        // View Rendering
+        function renderCurrentView() {
+            // Hide all views
+            feedView.classList.add('hidden');
+            reelsView.classList.add('hidden');
+            accountView.classList.add('hidden');
+            settingsView.classList.add('hidden');
+
+            if (state.showSettings) {
+                settingsView.classList.remove('hidden');
+                renderSettings();
+            } else {
+                switch (state.activeTab) {
+                    case 'feed':
+                        feedView.classList.remove('hidden');
+                        renderFeed();
+                        break;
+                    case 'reels':
+                        reelsView.classList.remove('hidden');
+                        renderReels();
+                        break;
+                    case 'account':
+                        accountView.classList.remove('hidden');
+                        renderAccount();
+                        break;
+                }
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Navigation
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setActiveTab(btn.dataset.tab);
+                });
+            });
+
+            // Back button
+            backButton.addEventListener('click', hideSettings);
+
+            // Fullscreen viewer
+            document.getElementById('fullscreen-close').addEventListener('click', closeFullscreen);
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (state.activeTab === 'reels') {
+                    if (e.key === 'ArrowUp') {
+                        goToPreviousReel();
+                    } else if (e.key === 'ArrowDown') {
+                        goToNextReel();
+                    } else if (e.key === ' ') {
+                        e.preventDefault();
+                        toggleVideoPlayPause();
+                    }
+                }
+                
+                if (state.fullscreenItem && e.key === 'Escape') {
+                    closeFullscreen();
+                }
+            });
+
+            // Click outside to close popups
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.feed-more')) {
+                    state.showInfoPopup = null;
+                    renderCurrentView();
+                }
+            });
+
+            // Initialize
+            applyTheme();
+            renderCurrentView();
         });
 
-        // Setup smooth scrolling with snap points
-        function setupSmoothScrolling() {
-            const container = document.getElementById('attendanceContainer');
-            let isScrolling = false;
-            
-            container.addEventListener('scroll', () => {
-                // Add momentum scrolling effect
-                if (!isScrolling) {
-                    window.requestAnimationFrame(() => {
-                        isScrolling = false;
-                    });
-                }
-                isScrolling = true;
-            });
-        }
-
-        // Show add member modal
-        function showAddMemberModal() {
-            document.getElementById('addMemberModal').style.display = 'flex';
-            document.getElementById('newMemberName').value = '';
-            document.getElementById('newMemberName').focus();
-        }
-
-        // Hide add member modal
-        function hideAddMemberModal() {
-            document.getElementById('addMemberModal').style.display = 'none';
-        }
-
-        // Add new team member
-        function addNewMember() {
-            const nameInput = document.getElementById('newMemberName');
-            const name = nameInput.value.trim();
-            
-            if (name) {
-                // Create new member with unique ID
-                const newId = Math.max(...attendanceData.teamMembers.map(m => m.id), 0) + 1;
-                attendanceData.teamMembers.push({ id: newId, name: name });
-                
-                // Regenerate grid
-                generateAttendanceGrid();
-                
-                // Show success message
-                showToast('Team member added successfully!');
-                updateStatus('Team member added successfully');
-                
-                // Hide modal
-                hideAddMemberModal();
-            } else {
-                alert('Please enter a valid name');
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (fullscreenViewer.cleanup) {
+                fullscreenViewer.cleanup();
             }
-        }
-
-        // Generate headers for the days of the month
-        function generateDaysHeaders() {
-            const daysHeader = document.getElementById('daysHeader');
-            daysHeader.innerHTML = '';
-            
-            const daysInMonth = 31; // Show 31 days for demo
-            
-            for (let i = 1; i <= daysInMonth; i++) {
-                const dayHeader = document.createElement('div');
-                dayHeader.className = 'day-header';
-                dayHeader.textContent = i;
-                daysHeader.appendChild(dayHeader);
-            }
-        }
-
-        // Generate the attendance grid
-        function generateAttendanceGrid() {
-            const gridBody = document.getElementById('attendanceGrid');
-            gridBody.innerHTML = '';
-            
-            const daysInMonth = 31; // Show 31 days for demo
-            const currentMonth = new Date().getMonth();
-            const currentYear = new Date().getFullYear();
-            
-            attendanceData.teamMembers.forEach(member => {
-                const row = document.createElement('div');
-                row.className = 'member-row';
-                
-                const memberName = document.createElement('div');
-                memberName.className = 'member-name';
-                memberName.textContent = member.name;
-                memberName.addEventListener('click', () => {
-                    if (confirm(`Remove ${member.name} from the team?`)) {
-                        removeTeamMember(member.id);
-                    }
-                });
-                row.appendChild(memberName);
-                
-                const attendanceCells = document.createElement('div');
-                attendanceCells.className = 'attendance-cells';
-                
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'attendance-cell';
-                    
-                    // Create a unique key for this date and member
-                    const dateKey = `${currentYear}-${currentMonth + 1}-${day}`;
-                    
-                    // Get status from data or default to none
-                    const status = attendanceData.attendanceRecords[member.id]?.[dateKey] || STATUS_TYPES.NONE;
-                    
-                    // Set initial appearance based on status
-                    updateCellAppearance(cell, status);
-                    
-                    // Store data attributes for reference
-                    cell.dataset.memberId = member.id;
-                    cell.dataset.date = dateKey;
-                    cell.dataset.status = status;
-                    
-                    // Add click event to cycle through statuses
-                    cell.addEventListener('click', () => {
-                        cycleAttendanceStatus(cell);
-                    });
-                    
-                    attendanceCells.appendChild(cell);
-                }
-                
-                row.appendChild(attendanceCells);
-                gridBody.appendChild(row);
-            });
-        }
-
-        // Remove a team member
-        function removeTeamMember(memberId) {
-            // Remove from team members
-            attendanceData.teamMembers = attendanceData.teamMembers.filter(m => m.id !== memberId);
-            
-            // Remove from attendance records
-            delete attendanceData.attendanceRecords[memberId];
-            
-            // Regenerate grid
-            generateAttendanceGrid();
-            
-            // Show success message
-            showToast('Team member removed successfully!');
-            updateStatus('Team member removed successfully');
-        }
-
-        // Cycle through attendance statuses when a cell is clicked
-        function cycleAttendanceStatus(cell) {
-            const status = cell.dataset.status;
-            let newStatus;
-            
-            switch(status) {
-                case STATUS_TYPES.NONE:
-                    newStatus = STATUS_TYPES.PRESENT;
-                    break;
-                case STATUS_TYPES.PRESENT:
-                    newStatus = STATUS_TYPES.ABSENT;
-                    break;
-                case STATUS_TYPES.ABSENT:
-                    newStatus = STATUS_TYPES.NONE;
-                    break;
-                default:
-                    newStatus = STATUS_TYPES.NONE;
-            }
-            
-            // Update the cell appearance
-            updateCellAppearance(cell, newStatus);
-            
-            // Update the data attribute
-            cell.dataset.status = newStatus;
-            
-            // Update the data structure
-            const memberId = parseInt(cell.dataset.memberId);
-            const dateKey = cell.dataset.date;
-            
-            if (!attendanceData.attendanceRecords[memberId]) {
-                attendanceData.attendanceRecords[memberId] = {};
-            }
-            
-            if (newStatus === STATUS_TYPES.NONE) {
-                delete attendanceData.attendanceRecords[memberId][dateKey];
-            } else {
-                attendanceData.attendanceRecords[memberId][dateKey] = newStatus;
-            }
-            
-            // Show feedback
-            showToast('Status updated');
-            updateStatus('Attendance status updated');
-        }
-
-        // Update cell appearance based on status
-        function updateCellAppearance(cell, status) {
-            cell.innerHTML = '';
-            const indicator = document.createElement('div');
-            indicator.className = 'status-indicator';
-            
-            switch(status) {
-                case STATUS_TYPES.PRESENT:
-                    indicator.style.background = 'linear-gradient(135deg, #66BB6A 0%, #43A047 100%)';
-                    indicator.innerHTML = '<i class="fas fa-check"></i>';
-                    cell.title = 'Present';
-                    break;
-                case STATUS_TYPES.ABSENT:
-                    indicator.style.background = 'linear-gradient(135deg, #EF5350 0%, #E53935 100%)';
-                    indicator.innerHTML = '<i class="fas fa-times"></i>';
-                    cell.title = 'Absent';
-                    break;
-                default:
-                    cell.title = 'Click to set status';
-                    indicator.style.background = 'rgba(255, 255, 255, 0.1)';
-                    indicator.innerHTML = '<i class="fas fa-plus" style="font-size: 12px; color: #D1C4E9;"></i>';
-            }
-            
-            cell.appendChild(indicator);
-        }
-
-        // Save data to localStorage
-        function saveData() {
-            try {
-                localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
-                showToast('Data saved successfully!');
-                updateStatus('Data saved successfully');
-            } catch (e) {
-                showToast('Error saving data');
-                updateStatus('Error saving data: ' + e.message);
-            }
-        }
-
-        // Load data from localStorage
-        function loadData() {
-            try {
-                const savedData = localStorage.getItem('attendanceData');
-                if (savedData) {
-                    attendanceData = JSON.parse(savedData);
-                    generateAttendanceGrid();
-                    showToast('Data loaded successfully!');
-                    updateStatus('Data loaded successfully');
-                } else {
-                    showToast('No saved data found');
-                    updateStatus('No saved data found. Using default data.');
-                }
-            } catch (e) {
-                showToast('Error loading data');
-                updateStatus('Error loading data: ' + e.message);
-            }
-        }
-
-        // Reset all data
-        function resetData() {
-            if (confirm('Are you sure you want to reset all attendance data?')) {
-                attendanceData.attendanceRecords = {};
-                generateAttendanceGrid();
-                showToast('Data reset successfully!');
-                updateStatus('Data reset successfully');
-            }
-        }
-
-        // Show toast notification
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.innerHTML = `<i class="fas fa-check-circle"></i><div>${message}</div>`;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        // Update status message
-        function updateStatus(message) {
-            document.getElementById('statusMessage').textContent = message;
-        }
+        });
     </script>
 </body>
 </html>
